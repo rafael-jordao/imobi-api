@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  email      String   @unique
+  password   String
+  phone      String
+  cpf        String   @unique
+  created_at DateTime
+  updated_at DateTime
+
+  @@map("client")
+}
+
+model Broker {
+  id         String     @id @default(uuid()) @db.Uuid
+  name       String
+  email      String     @unique
+  password   String
+  phone      String
+  cpf        String     @unique
+  creci      String     @unique
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  property   Property[]
+
+  @@map("broker")
+}
+
+enum PropertyFinalityType {
+  VENDA
+  ALUGUEL
+
+  @@map("property_finality_type")
+}
+
+enum StatusType {
+  LANCAMENTO
+  PRONTO
+  CONSTRUCAO
+
+  @@map("status_type")
+}
+
+model Property {
+  id                String               @id @default(uuid()) @db.Uuid
+  broker_id         String               @db.Uuid
+  category_id       String               @db.Uuid
+  building_finality PropertyFinalityType
+  status            StatusType
+  private_area      Float
+  total_area        Float
+  bedrooms          Int
+  suites            Int
+  garages           Int
+  details           String
+  price             Float
+  condominium_fee   Float
+  created_at        DateTime             @default(now())
+  updated_at        DateTime             @updatedAt
+
+  broker   Broker          @relation(fields: [broker_id], references: [id], onDelete: Cascade)
+  brokerId String          @db.Uuid
+  category Category        @relation(fields: [category_id], references: [id])
+  address  Address?
+  photos   PropertyPhoto[]
+
+  @@map("property")
+}
+
+model Category {
+  id          String     @id @default(uuid()) @db.Uuid
+  property_id String
+  name        String
+  icon        String
+  property    Property[]
+
+  @@map("category")
+}
+
+model Address {
+  id           String   @id @default(uuid()) @db.Uuid
+  property_id  String   @unique @db.Uuid
+  city         String
+  neighborhood String
+  address      String
+  number       String
+  landmark     String
+  property     Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+
+  @@map("address")
+}
+
+model PropertyPhoto {
+  id          String   @id @default(uuid()) @db.Uuid
+  property_id String   @db.Uuid
+  image_path  String
+  details     String
+  order       Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  Property    Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+
+  @@map("property_photo")
+}
