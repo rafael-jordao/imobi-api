@@ -2,7 +2,6 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateBrokerDto } from './dto/create-broker.dto';
 import { UpdateBrokerDto } from './dto/update-broker.dto';
 import { BrokerRepository } from 'src/shared/database/repositories/broker.repository';
-import { hash } from 'bcryptjs';
 
 @Injectable()
 export class BrokerService {
@@ -11,29 +10,13 @@ export class BrokerService {
   async create(createBrokerDto: CreateBrokerDto) {
     const { name, email, password, phone, cpf, creci } = createBrokerDto;
 
-    const emailIsAlreadyInUse = await this.brokerRepo.findByEmail({
-      where: {
-        email: email,
-      },
-      select: { id: true }
-    });
-
-    const hashedPassword = await hash(password, 12);
+    const emailIsAlreadyInUse = await this.brokerRepo.findByEmail(email);
 
     if (emailIsAlreadyInUse) {
       throw new ConflictException('This email is already in use')
     }
 
-    const broker = await this.brokerRepo.create({
-      data: {
-        name: name,
-        email: email,
-        password: hashedPassword,
-        phone: phone,
-        cpf: cpf,
-        creci: creci
-      }
-    });
+    const broker = await this.brokerRepo.create({ name, email, password, phone, cpf, creci });
 
     return {
       name: broker.name,
